@@ -1,0 +1,56 @@
+name: Playwright CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Chromium smoke + reports
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Run smoke tests
+        run: pnpm test:smoke
+
+      - name: Generate Allure 3 report
+        if: always()
+        continue-on-error: true
+        run: pnpm allure:generate
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-allure-reports-${{ github.run_number }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            playwright-report/
+            allure-results/
+            allure-report/
+            test-results/

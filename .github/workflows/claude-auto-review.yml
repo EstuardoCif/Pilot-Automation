@@ -1,0 +1,75 @@
+name: Claude Auto PR Review & Fix
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+jobs:
+  claude-review:
+    name: Claude review and safe autofix
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'claude[bot]'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Install Chromium for validation
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Claude Code review and autofix
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          additional_permissions: |
+            actions: read
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            BASE BRANCH: ${{ github.event.pull_request.base.ref }}
+            HEAD BRANCH: ${{ github.event.pull_request.head.ref }}
+
+            Perform an automatic senior QA automation review of this pull request.
+
+            Mandatory instructions:
+            1. Read CLAUDE.md first.
+            2. Apply the repository skill at .claude/skills/pr-quality-gate/SKILL.md.
+            3. Review the PR diff against the base branch, including Page Object Model quality,
+               Playwright/TypeScript correctness, selectors, assertions, async handling,
+               test isolation, tags, Allure integration, dependency changes and CI impact.
+            4. Read GitHub Actions/CI status and logs when available.
+            5. If you find concrete high-confidence issues that are safe to fix, modify the
+               current PR branch directly.
+            6. Before committing any fix, run `pnpm typecheck` and `pnpm test:smoke`.
+            7. Only if your changes pass validation, create one focused commit and push it to
+               the current PR branch.
+            8. If no code change is needed, do not create an empty commit.
+            9. Never merge, rebase, force-push, push to main, or expose secrets.
+            10. Finish with a concise PR review summary explaining findings, fixes, and validation.
+          claude_args: |
+            --max-turns 30
+            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(git:*),Bash(pnpm:*)"
