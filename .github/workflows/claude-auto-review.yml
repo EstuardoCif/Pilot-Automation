@@ -76,8 +76,26 @@ jobs:
                the current PR branch.
             8. If no code change is needed, do not create an empty commit.
             9. Never merge, rebase, force-push, push to main, or expose secrets.
+               GitHub Auto-Merge is responsible for merging after all repository requirements pass.
             10. Finish with a concise PR review summary explaining findings, fixes, and validation.
 
           claude_args: |
             --max-turns 30
             --allowedTools "Read,Write,Edit,Grep,Glob,Bash(git:*),Bash(pnpm:*)"
+
+      - name: Enable GitHub auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        shell: bash
+        run: |
+          CURRENT_HEAD="$(gh pr view "$PR_URL" --json headRefOid --jq '.headRefOid')"
+
+          echo "Enabling auto-merge for PR:"
+          echo "$PR_URL"
+          echo "Current head commit: $CURRENT_HEAD"
+
+          gh pr merge "$PR_URL" \
+            --auto \
+            --squash \
+            --match-head-commit "$CURRENT_HEAD"
