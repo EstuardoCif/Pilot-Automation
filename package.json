@@ -1,0 +1,37 @@
+{
+  "name": "pilot-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pilot E2E automation framework for QA Automation Labs Shop using Playwright, TypeScript, pnpm, POM, Allure Report 3 and Claude Code GitHub Actions.",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=24 <27",
+    "pnpm": ">=12.3.0 <13"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:smoke": "playwright test --grep @smoke --project=chromium",
+    "test:regression": "playwright test --grep @regression --project=chromium",
+    "test:headed": "playwright test --project=chromium --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --project=chromium --debug",
+    "codegen": "playwright codegen https://shop.qaautomationlabs.com/shop.php",
+    "report:playwright": "playwright show-report",
+    "allure:generate": "allure generate ./allure-results --output ./allure-report --clean",
+    "allure:open": "allure open ./allure-report",
+    "allure:serve": "allure serve ./allure-results",
+    "typecheck": "tsc --noEmit",
+    "clean": "node ./scripts/clean.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.13.4",
+    "allure": "3.17.0",
+    "allure-playwright": "3.12.1",
+    "dotenv": "17.4.2",
+    "typescript": "7.0.2"
+  }
+}
