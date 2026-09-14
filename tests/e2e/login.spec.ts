@@ -5,7 +5,7 @@ test.describe('Authentication', { tag: ['@ui', '@login'] }, () => {
   test(
     'authenticates a valid user and redirects to the shop',
     { tag: ['@smoke', '@authentication', '@happy-path'] },
-    async ({ loginPage }) => {
+    async ({ loginPage, page }) => {
 
       await test.step('Open the login page', async () => {
         await loginPage.open();
@@ -18,6 +18,8 @@ test.describe('Authentication', { tag: ['@ui', '@login'] }, () => {
           'demo'
         );
       });
+
+      await page.waitForTimeout(10000);
 
       await test.step('Verify successful login', async () => {
         await loginPage.expectLoginSuccessful();
