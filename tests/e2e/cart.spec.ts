@@ -1,8 +1,20 @@
-import { test } from '../../src/fixtures/pages.fixture';
+import { test, expect } from '../../src/fixtures/pages.fixture';
 
 test.describe('Cart', { tag: ['@ui', '@cart'] }, () => {
-  test('loads the cart shell and checkout action', { tag: '@smoke' }, async ({ cartPage }) => {
-    await cartPage.open();
-    await cartPage.expectLoaded();
-  });
+
+  test(
+    'navigates from cart to checkout',
+    { tag: ['@smoke', '@navigation'] },
+    async ({ cartPage, page }) => {
+
+      await cartPage.open();
+
+      await cartPage.expectLoaded();
+
+      await cartPage.checkoutLink.click();
+
+      await expect(page).toHaveURL(/\/checkout\.php(?:[?#].*)?$/);
+    }
+  );
+
 });
