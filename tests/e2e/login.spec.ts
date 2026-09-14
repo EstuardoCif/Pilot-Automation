@@ -3,8 +3,8 @@ import { test } from '../../src/fixtures/pages.fixture';
 test.describe('Authentication', { tag: ['@ui', '@login'] }, () => {
 
   test(
-    'logs in successfully with valid credentials',
-    { tag: ['@smoke', '@authentication'] },
+    'authenticates a valid user and redirects to the shop',
+    { tag: ['@smoke', '@authentication', '@happy-path'] },
     async ({ loginPage }) => {
 
       await test.step('Open the login page', async () => {
